@@ -277,59 +277,47 @@ class CouchBaseConnection:
 
     # Ticket-related methods
     def create_ticket(self, phone_number: str, issue: str, priority: str = "medium", category: str = "general") -> Dict[str, Any]:
-        """
-        Create a new support ticket
-        
-        Args:
-            phone_number (str): Customer's phone number (user ID)
-            issue (str): Issue description
-            priority (str): Ticket priority
-            category (str): Issue category
-            
-        Returns:
-            Dict[str, Any]: Created ticket data
-            
-        Raises:
-            CouchbaseException: If database operation fails
-        """
-        try:
-            # Ensure connection is active
-            self.ensure_connection()
-            
-            # Generate unique ticket ID
-            ticket_id = f"TKT_{uuid.uuid4().hex[:8].upper()}_{int(time.time())}"
-            
-            # Create ticket data
-            current_time = datetime.utcnow().isoformat()
-            
-            ticket_data = {
-                "ticket_id": ticket_id,
-                "phone_number": phone_number,
-                "issue": issue,
-                "priority": priority.lower(),
-                "category": category.lower(),
-                "status": "open",
-                "created_at": current_time,
-                "updated_at": current_time,
-                "assigned_to": None,
-                "resolution": None,
-                "closed_at": None,
-                "customer_satisfaction": None,
-                "metadata": {
-                    "source": "api",
-                    "channel": "crm"
-                }
+    """
+    Create a new support ticket with a smaller ticket ID
+    """
+    try:
+        # Ensure connection is active
+        self.ensure_connection()
+
+        # Generate a short unique ticket ID (8-char hex)
+        ticket_id = f"TKT-{uuid.uuid4().hex[:6].upper()}"
+
+        # Create ticket data
+        current_time = datetime.utcnow().isoformat()
+        ticket_data = {
+            "ticket_id": ticket_id,
+            "phone_number": phone_number,
+            "issue": issue,
+            "priority": priority.lower(),
+            "category": category.lower(),
+            "status": "open",
+            "created_at": current_time,
+            "updated_at": current_time,
+            "assigned_to": None,
+            "resolution": None,
+            "closed_at": None,
+            "customer_satisfaction": None,
+            "metadata": {
+                "source": "api",
+                "channel": "crm"
             }
-            
-            # Insert into tickets collection
-            self.tickets_collection.insert(ticket_id, ticket_data)
-            
-            logger.info(f"Created ticket {ticket_id} for phone {phone_number}")
-            return ticket_data
-            
-        except Exception as e:
-            logger.error(f"Error creating ticket for phone {phone_number}: {e}")
-            raise CouchbaseException(f"Failed to create ticket: {str(e)}")
+        }
+
+        # Insert into tickets collection
+        self.tickets_collection.insert(ticket_id, ticket_data)
+
+        logger.info(f"Created ticket {ticket_id} for phone {phone_number}")
+        return ticket_data
+
+    except Exception as e:
+        logger.error(f"Error creating ticket for phone {phone_number}: {e}")
+        raise CouchbaseException(f"Failed to create ticket: {str(e)}")
+
         
 
     def get_ticket_with_verification(self, ticket_id: str, last_four_digits: str) -> Optional[Dict[str, Any]]:
