@@ -320,7 +320,7 @@ class CouchBaseConnection:
             self.ensure_connection()
 
             # Generate unique ticket ID
-            ticket_id = f"TKT_{uuid.uuid4().hex[:8].upper()}_{int(time.time())}"
+            ticket_id = f"TKT-{uuid.uuid4().hex[:6].upper()}"
 
             # Create ticket data
             current_time = datetime.utcnow().isoformat()
